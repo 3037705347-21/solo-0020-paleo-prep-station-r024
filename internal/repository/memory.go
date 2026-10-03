@@ -8,11 +8,10 @@ import (
 )
 
 type state struct {
-	specimens   map[string]domain.Specimen
-	plans       map[string]domain.PrepPlan
-	progress    map[string][]domain.ProgressEntry
-	releases    map[string]domain.ReleaseRecord
-	transitions map[string]domain.TerminalTransition
+	specimens map[string]domain.Specimen
+	plans     map[string]domain.PrepPlan
+	progress  map[string][]domain.ProgressEntry
+	releases  map[string]domain.ReleaseRecord
 }
 
 type MemoryRepository struct {
@@ -23,11 +22,10 @@ type MemoryRepository struct {
 func NewMemory() *MemoryRepository {
 	return &MemoryRepository{
 		state: state{
-			specimens:   make(map[string]domain.Specimen),
-			plans:       make(map[string]domain.PrepPlan),
-			progress:    make(map[string][]domain.ProgressEntry),
-			releases:    make(map[string]domain.ReleaseRecord),
-			transitions: make(map[string]domain.TerminalTransition),
+			specimens: make(map[string]domain.Specimen),
+			plans:     make(map[string]domain.PrepPlan),
+			progress:  make(map[string][]domain.ProgressEntry),
+			releases:  make(map[string]domain.ReleaseRecord),
 		},
 	}
 }
@@ -56,10 +54,6 @@ func cloneMutation(source state) *Mutation {
 		plans:     make(map[string]domain.PrepPlan, len(source.plans)),
 		progress:  make(map[string][]domain.ProgressEntry, len(source.progress)),
 		releases:  make(map[string]domain.ReleaseRecord, len(source.releases)),
-		transitions: make(
-			map[string]domain.TerminalTransition,
-			len(source.transitions),
-		),
 	}
 	for key, value := range source.specimens {
 		copied.specimens[key] = value
@@ -72,9 +66,6 @@ func cloneMutation(source state) *Mutation {
 	}
 	for key, value := range source.releases {
 		copied.releases[key] = value
-	}
-	for key, value := range source.transitions {
-		copied.transitions[key] = value
 	}
 	return &Mutation{state: copied}
 }
@@ -172,34 +163,4 @@ func (m *Mutation) ReleaseForSpecimen(specimenID string) (domain.ReleaseRecord, 
 
 func (m *Mutation) PutRelease(value domain.ReleaseRecord) {
 	m.state.releases[value.ID] = value
-}
-
-func (m *Mutation) TransitionForSpecimen(
-	specimenID string,
-) (domain.TerminalTransition, bool) {
-	value, ok := m.state.transitions[specimenID]
-	return value, ok
-}
-
-func (m *Mutation) TransitionForPlan(
-	planID string,
-) (domain.TerminalTransition, bool) {
-	for _, value := range m.state.transitions {
-		if value.PlanID == planID {
-			return value, true
-		}
-	}
-	return domain.TerminalTransition{}, false
-}
-
-func (m *Mutation) PutTransition(value domain.TerminalTransition) {
-	m.state.transitions[value.SpecimenID] = value
-}
-
-func (m *Mutation) DeleteTransition(specimenID string) bool {
-	if _, ok := m.state.transitions[specimenID]; !ok {
-		return false
-	}
-	delete(m.state.transitions, specimenID)
-	return true
 }
